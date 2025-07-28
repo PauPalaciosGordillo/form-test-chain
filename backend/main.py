@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from backend import models, schemas
 from backend.db import SessionLocal, engine
+from typing import List
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -30,10 +31,14 @@ def crear_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db))
     db.refresh(nuevo_usuario)
     return {
         "id": nuevo_usuario.id,
-        "nombre_completo": nuevo_usuario.nombre,  
+        "nombre_completo": nuevo_usuario.nombre,
         "email": nuevo_usuario.email,
         "telefono": nuevo_usuario.telefono,
         "edad": nuevo_usuario.edad,
         "pais": nuevo_usuario.pais,
         "comentarios": nuevo_usuario.comentarios
     }
+
+@app.get("/usuarios/", response_model=List[schemas.UsuarioOut])
+def listar_usuarios(db: Session = Depends(get_db)):
+    return db.query(models.Usuario).all()

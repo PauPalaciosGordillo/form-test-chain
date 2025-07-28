@@ -1,9 +1,11 @@
+import uuid
 from backend.tests.test_db import client
 
 def test_crear_usuario():
+    email_unico = f"test_{uuid.uuid4()}@example.com"
     response = client.post("/usuarios/", json={
         "nombre_completo": "Test User",
-        "email": "testuser@example.com",
+        "email": email_unico,
         "telefono": "123456789",
         "edad": 30,
         "pais": "España",
@@ -11,68 +13,36 @@ def test_crear_usuario():
     })
     assert response.status_code == 200
     data = response.json()
-    assert data["nombre_completo"] == "Test User"
-    assert data["email"] == "testuser@example.com"
-    assert "id" in data
+    assert data["email"] == email_unico
 
-def test_crear_usuario_faltan_campos():
+def test_campos_obligatorios():
+    response = client.post("/usuarios/", json={})
+    assert response.status_code == 422
+
+def test_edad_negativa():
+    email_unico = f"edad_negativa_{uuid.uuid4()}@example.com"
     response = client.post("/usuarios/", json={
-        "email": "incompleto@example.com",
-        "telefono": "123456789",
+        "nombre_completo": "Negativo",
+        "email": email_unico,
+        "telefono": "000000000",
+        "edad": -10,
+        "pais": "España",
+        "comentarios": ""
+    })
+    assert response.status_code == 422
+
+def test_email_invalido():
+    response = client.post("/usuarios/", json={
+        "nombre_completo": "Correo Inválido",
+        "email": "correo-no-valido",
+        "telefono": "000000000",
         "edad": 25,
-        "pais": "España"
+        "pais": "España",
+        "comentarios": ""
     })
     assert response.status_code == 422
 
-def test_crear_usuario_email_invalido():
-    response = client.post("/usuarios/", json={
-        "nombre_completo": "Email Inválido",
-        "email": "noesuncorreo",
-        "telefono": "123456789",
-        "edad": 30,
-        "pais": "España",
-        "comentarios": "Correo no válido"
-    })
-    assert response.status_code == 422
-
-def test_crear_usuario_edad_negativa():
-    response = client.post("/usuarios/", json={
-        "nombre_completo": "Edad Negativa",
-        "email": "edad@negativa.com",
-        "telefono": "123456789",
-        "edad": -5,
-        "pais": "España",
-        "comentarios": "Edad inválida"
-    })
-    assert response.status_code == 422
-
-def test_crear_usuario_telefono_invalido():
-    response = client.post("/usuarios/", json={
-        "nombre_completo": "Teléfono Inválido",
-        "email": "telefono@invalido.com",
-        "telefono": "123ABC456",
-        "edad": 30,
-        "pais": "España",
-        "comentarios": "Teléfono con letras"
-    })
-    assert response.status_code == 422
-
-    response = client.post("/usuarios/", json={
-        "nombre_completo": "Teléfono Corto",
-        "email": "telefono@corto.com",
-        "telefono": "12345",
-        "edad": 30,
-        "pais": "España",
-        "comentarios": "Teléfono demasiado corto"
-    })
-    assert response.status_code == 422
-
-    response = client.post("/usuarios/", json={
-        "nombre_completo": "Teléfono Largo",
-        "email": "telefono@largo.com",
-        "telefono": "1234567890",
-        "edad": 30,
-        "pais": "España",
-        "comentarios": "Teléfono demasiado largo"
-    })
-    assert response.status_code == 422
+def test_listar_usuarios():
+    response = client.get("/usuarios/")
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)

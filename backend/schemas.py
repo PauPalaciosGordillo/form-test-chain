@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
 
 class UsuarioBase(BaseModel):
@@ -9,7 +9,8 @@ class UsuarioBase(BaseModel):
     pais: str
     comentarios: Optional[str] = None
 
-    @validator("telefono")
+    @field_validator("telefono")
+    @classmethod
     def validar_telefono(cls, v):
         if not v.isdigit():
             raise ValueError("El teléfono solo debe contener dígitos")
@@ -19,3 +20,16 @@ class UsuarioBase(BaseModel):
 
 class UsuarioCreate(UsuarioBase):
     pass
+
+class UsuarioOut(BaseModel):
+    id: int
+    nombre: str
+    email: EmailStr
+    telefono: str
+    edad: int
+    pais: str
+    comentarios: Optional[str] = None
+
+    model_config = {
+        "from_attributes": True
+    }
